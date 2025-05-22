@@ -1,6 +1,5 @@
-import { React, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 import {
   Avatar,
   Box,
@@ -12,11 +11,11 @@ import {
 } from '@mui/material';
 
 import userImage from '../assets/images/Clientes/c-1.jpg';
-import { onLogout } from '../store/auth';
+import { useAuthStore } from '../hooks/auth/useAuthStore';
 
 export default function IconButtom({ menu, user }) {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const { startLogout } = useAuthStore();
 
   // Estado para abrir el submenu de usuario
   const [anchorElUser, setAnchorElUser] = useState(null);
@@ -32,9 +31,8 @@ export default function IconButtom({ menu, user }) {
   };
 
   //Evento
-  const handleClick = () => {
-    dispatch(onLogout());
-    navigate('/');
+  const onLogout = async () => {
+    await startLogout();
   };
 
   return (
@@ -58,7 +56,7 @@ export default function IconButtom({ menu, user }) {
             vertical: 'top',
             horizontal: 'right',
           }}
-          keepMounted
+          // keepMounted
           transformOrigin={{
             vertical: 'top',
             horizontal: 'right',
@@ -71,12 +69,16 @@ export default function IconButtom({ menu, user }) {
             <MenuItem
               key={item.titulo}
               onClick={() =>
-                item.path === 'Cerrar' ? handleClick() : navigate(item.path)
+                item.path === 'Cerrar' ? onLogout() : navigate(item.path)
               }
             >
               <Typography textAlign="center">{item.titulo}</Typography>
             </MenuItem>
           ))}
+
+          <MenuItem onClick={onLogout}>
+            <Typography textAlign="center">Cerrar sesión</Typography>
+          </MenuItem>
         </Menu>
       </Box>
     </>

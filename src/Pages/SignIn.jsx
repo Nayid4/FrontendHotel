@@ -1,25 +1,57 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Button, Container, TextField, Typography } from '@mui/material';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import LockIcon from '@mui/icons-material/Lock';
+import { AccountCircle, Lock } from '@mui/icons-material';
 
 import '../index.css';
 import imagen from '../assets/images/logo.png';
-import Alert from '../Components/Alert';
-import { useSignIn } from '../hooks/auth/useSignIn';
+import { useAuthStore } from '../hooks/auth/useAuthStore';
+import { useForm } from '../hooks/useForm';
+import { CustomAlert } from '../Components/CustomAlert';
+
+const signInForm = {
+  username: '',
+  password: '',
+};
+
+const formValidations = {
+  username: [
+    (value = '') => value.trim().length !== 0,
+    'Debe ingresar el nombre de usuario',
+  ],
+  password: [
+    (value = '') => value.trim().length !== 0,
+    'Debe ingresar la contraseña',
+  ],
+};
 
 export default function SignIn() {
+  const [openAlert, setOpenAlert] = useState(false);
+  const { errorMessage, startSignIn } = useAuthStore();
   const {
-    alerta,
-    setAlerta,
-    handleSubmit,
-    isFormSubmitted,
-    nombreUsuario,
-    nombreUsuarioValid,
+    isFormPosted,
+    isFormValid,
     onInputChange,
     password,
     passwordValid,
-  } = useSignIn();
+    setIsFormPosted,
+    username,
+    usernameValid,
+  } = useForm(signInForm, formValidations);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setIsFormPosted(true);
+    if (!isFormValid) return;
+
+    await startSignIn(username, password);
+    setOpenAlert(true);
+  };
+
+  const handleClose = () => {
+    setOpenAlert(false);
+  };
 
   return (
     <Container maxWidth="sm">
@@ -79,15 +111,15 @@ export default function SignIn() {
                   borderBottomColor: 'white', // Cambia el color de la línea en hover
                 },
               }}
-              name="nombreUsuario"
+              name="username"
               id="standard-basic"
               variant="standard"
               label="Nombre De Usuario"
               color="secondary"
-              value={nombreUsuario}
+              value={username}
               fullWidth
-              error={!!nombreUsuarioValid && isFormSubmitted}
-              helperText={isFormSubmitted && nombreUsuarioValid}
+              error={!!usernameValid && isFormPosted}
+              helperText={isFormPosted && usernameValid}
               onChange={onInputChange}
               InputLabelProps={{ style: { color: 'white' } }}
               inputProps={{
@@ -99,7 +131,7 @@ export default function SignIn() {
 
           {/*- - Contraseña - -*/}
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <LockIcon
+            <Lock
               sx={{
                 color: 'primary',
                 marginRight: '1px',
@@ -125,8 +157,8 @@ export default function SignIn() {
               type="password"
               value={password}
               fullWidth
-              error={!!passwordValid && isFormSubmitted}
-              helperText={isFormSubmitted && passwordValid}
+              error={!!passwordValid && isFormPosted}
+              helperText={isFormPosted && passwordValid}
               InputLabelProps={{ style: { color: 'white' } }}
               inputProps={{
                 'aria-label': 'Contraseña',
@@ -143,7 +175,7 @@ export default function SignIn() {
             margin="2px"
             sx={{ mb: 1 }}
           >
-            <Link>
+            <Link to="/ForgotPassword">
               <Typography
                 variant="body2"
                 color="primary"
@@ -155,7 +187,12 @@ export default function SignIn() {
           </Box>
 
           {/* Notificación de alerta */}
-          <Alert alerta={alerta} setAlerta={setAlerta} />
+
+          <CustomAlert
+            open={openAlert}
+            message={errorMessage}
+            onClose={handleClose}
+          />
 
           {/*- - Boton del formulario - -*/}
           <Box
@@ -175,16 +212,14 @@ export default function SignIn() {
 
           {/*- - Mensaje para ir a crear una cuenta - -*/}
           <Box display="flex" justifyContent="center" margin="2px">
-            <Typography
-              variant="body2"
-              color="secondary"
-              sx={{ fontSize: '14px', paddingRight: '1px', cursor: 'pointer' }}
-            >
-              ¿No tienes cuenta?{' '}
-              <Link to="/sign-up" style={{ color: '#580EF6' }}>
-                Registrarse
-              </Link>
+            <Typography variant="body2" color="secondary" marginRight="4px">
+              ¿No tienes cuenta?
             </Typography>
+            <Link to="/sign-up">
+              <Typography variant="body2" color="primary">
+                Registrate
+              </Typography>
+            </Link>
           </Box>
         </form>
       </Box>
